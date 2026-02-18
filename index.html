@@ -2,776 +2,581 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Code de la route – Entraînement</title>
+  <title>Mailing list Supabase – Démo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Supabase JS v2 -->
+
+  <!-- Supabase JS v2 (CDN) -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
   <style>
     :root {
-      --bg: #050816;
-      --bg-alt: #0b1020;
-      --accent: #3b82f6;
-      --accent-soft: rgba(59,130,246,0.15);
-      --text: #f9fafb;
-      --muted: #9ca3af;
+      --bg: #0f172a;
+      --bg-soft: #111827;
+      --accent: #6366f1;
+      --accent-soft: #4f46e5;
+      --text-main: #e5e7eb;
+      --text-soft: #9ca3af;
       --error: #f97373;
-      --radius: 12px;
-      --shadow: 0 18px 45px rgba(0,0,0,0.45);
-      --transition: 0.2s ease;
-      --font: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      --success: #22c55e;
     }
 
-    *, *::before, *::after { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+    }
 
     body {
-      margin: 0;
-      font-family: var(--font);
-      background: radial-gradient(circle at top, #111827 0, #020617 50%, #000 100%);
-      color: var(--text);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    header.topbar {
+      background: radial-gradient(circle at top, #1e293b 0, #020617 60%);
+      color: var(--text-main);
       display: flex;
       align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 720px;
+      background: linear-gradient(145deg, rgba(15,23,42,0.96), rgba(15,23,42,0.98));
+      border-radius: 1.5rem;
+      padding: 2rem 1.75rem 2.25rem;
+      box-shadow:
+        0 24px 60px rgba(15,23,42,0.85),
+        0 0 0 1px rgba(148,163,184,0.12);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(148,163,184,0.25);
+    }
+
+    header {
+      display: flex;
       justify-content: space-between;
-      padding: 0.75rem 1.25rem;
-      border-bottom: 1px solid rgba(148,163,184,0.2);
-      backdrop-filter: blur(14px);
-      background: linear-gradient(135deg, rgba(15,23,42,0.95), rgba(15,23,42,0.7));
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.75rem;
     }
 
-    .logo {
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      font-size: 1rem;
-    }
-
-    .topnav {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .nav-btn {
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      padding: 0.35rem 0.7rem;
-      border-radius: 999px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      transition: var(--transition);
-    }
-
-    .nav-btn:hover {
-      background: rgba(15,23,42,0.8);
-      color: var(--text);
-    }
-
-    .nav-btn.active {
-      background: var(--accent-soft);
-      color: var(--accent);
-    }
-
-    .auth-area {
+    .brand {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 0.9rem;
+      background: conic-gradient(
+        from 160deg,
+        #4f46e5,
+        #06b6d4,
+        #22c55e,
+        #eab308,
+        #f97316,
+        #ec4899,
+        #4f46e5
+      );
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-logo::after {
+      content: "";
+      position: absolute;
+      inset: 2px;
+      border-radius: 0.8rem;
+      background: radial-gradient(circle at top left, #1f2937, #020617);
+    }
+
+    .brand-dot {
+      position: absolute;
+      inset: 2px;
+      border-radius: 0.8rem;
+      background: radial-gradient(circle at 25% 0, rgba(248,250,252,0.16), transparent 55%);
+    }
+
+    .brand-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+    }
+
+    .brand-sub {
       font-size: 0.8rem;
+      color: var(--text-soft);
     }
 
-    #user-email {
-      color: var(--muted);
+    .auth-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.7);
+      border: 1px solid rgba(148,163,184,0.4);
+      font-size: 0.8rem;
+      color: var(--text-soft);
     }
 
-    #btn-logout {
-      display: none; /* masqué par défaut, montré quand connecté */
+    .auth-pill span {
+      max-width: 170px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-small {
+      border: none;
+      border-radius: 999px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      background: rgba(79,70,229,0.08);
+      color: #c7d2fe;
+    }
+
+    .btn-small:hover {
+      background: rgba(79,70,229,0.16);
     }
 
     main {
-      flex: 1;
-      max-width: 960px;
-      width: 100%;
-      margin: 1.5rem auto 2rem;
-      padding: 0 1rem;
+      display: grid;
+      gap: 1.75rem;
     }
 
-    .view { display: none; }
-    .view.active {
-      display: block;
-      animation: fadeIn 0.25s ease-out;
+    .hero {
+      text-align: left;
+    }
+
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--text-soft);
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(148,163,184,0.25);
+      margin-bottom: 0.8rem;
+    }
+
+    .hero-kicker-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34,197,94,0.28);
     }
 
     h1 {
-      margin: 0 0 0.9rem;
-      font-size: 1.6rem;
+      font-size: 1.7rem;
+      line-height: 1.2;
+      margin-bottom: 0.6rem;
     }
 
-    p {
-      margin: 0 0 0.75rem;
-      color: var(--muted);
-    }
-
-    .card {
-      margin-top: 1rem;
-      background: radial-gradient(circle at top left, rgba(59,130,246,0.15), rgba(15,23,42,1));
-      border-radius: var(--radius);
-      padding: 1.25rem 1.4rem;
-      border: 1px solid rgba(148,163,184,0.25);
-      box-shadow: var(--shadow);
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 0.75rem;
-    }
-
-    label {
-      font-size: 0.8rem;
-      margin-bottom: 0.15rem;
-      color: var(--muted);
-    }
-
-    input[type="email"],
-    input[type="password"] {
-      padding: 0.55rem 0.7rem;
-      border-radius: 8px;
-      border: 1px solid rgba(148,163,184,0.4);
-      background: rgba(15,23,42,0.8);
-      color: var(--text);
-      outline: none;
+    .hero-sub {
       font-size: 0.9rem;
-      transition: var(--transition);
+      color: var(--text-soft);
+      max-width: 460px;
     }
 
-    input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(59,130,246,0.5);
+    /* Bloc newsletter */
+    .newsletter-card {
+      border-radius: 1.25rem;
+      background: radial-gradient(circle at top left, rgba(79,70,229,0.22), rgba(15,23,42,0.97));
+      padding: 1.4rem 1.3rem 1.35rem;
+      border: 1px solid rgba(129,140,248,0.4);
+      position: relative;
+      overflow: hidden;
     }
 
-    .btn {
-      border-radius: 999px;
-      padding: 0.45rem 1.1rem;
-      font-size: 0.9rem;
-      border: none;
-      cursor: pointer;
-      transition: var(--transition);
+    .newsletter-card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 0 0, rgba(59,130,246,0.3), transparent 55%),
+        radial-gradient(circle at 80% 0, rgba(236,72,153,0.35), transparent 60%);
+      opacity: 0.18;
+      pointer-events: none;
     }
 
-    .btn.primary {
-      background: linear-gradient(135deg, #3b82f6, #22c55e);
-      color: #0b1020;
+    .newsletter-inner {
+      position: relative;
+      display: grid;
+      gap: 0.8rem;
+      z-index: 1;
+    }
+
+    .newsletter-title {
+      font-size: 1rem;
       font-weight: 600;
     }
 
-    .btn.secondary {
-      background: transparent;
-      color: var(--muted);
+    .newsletter-text {
+      font-size: 0.85rem;
+      color: #e5e7eb;
+      max-width: 420px;
+    }
+
+    .newsletter-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .newsletter-form input[type="email"] {
+      flex: 1 1 180px;
+      min-width: 0;
+      padding: 0.65rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.6);
+      background: rgba(15,23,42,0.92);
+      color: var(--text-main);
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .newsletter-form input[type="email"]::placeholder {
+      color: rgba(148,163,184,0.9);
+    }
+
+    .btn-primary,
+    .btn-ghost {
+      border-radius: 999px;
+      padding: 0.65rem 1.05rem;
+      border: none;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #e5e7eb;
+      box-shadow:
+        0 10px 25px rgba(79,70,229,0.55),
+        0 0 0 1px rgba(191,219,254,0.25);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      transform: translateY(-0.5px);
+    }
+
+    .btn-ghost {
+      background: rgba(15,23,42,0.9);
+      color: var(--text-soft);
+      border: 1px solid rgba(148,163,184,0.55);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(15,23,42,1);
+    }
+
+    .status {
+      font-size: 0.8rem;
+      min-height: 1.15rem;
+      color: var(--text-soft);
+      margin-top: 0.35rem;
+    }
+
+    .status.error {
+      color: var(--error);
+    }
+
+    .status.success {
+      color: var(--success);
+    }
+
+    .status.muted {
+      opacity: 0.85;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--text-soft);
+      margin-top: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    .meta-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.3rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.92);
       border: 1px solid rgba(148,163,184,0.4);
     }
 
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
-
-    .btn.primary:hover:not(:disabled) {
-      filter: brightness(1.1);
-    }
-
-    .btn.secondary:hover {
-      background: rgba(15,23,42,0.8);
-    }
-
-    .auth-tabs {
-      margin: 1rem 0 0.4rem;
-      display: inline-flex;
-      padding: 0.2rem;
+    .meta-dot {
+      width: 6px;
+      height: 6px;
       border-radius: 999px;
-      background: rgba(15,23,42,0.9);
-      border: 1px solid rgba(148,163,184,0.35);
+      background: #38bdf8;
     }
 
-    .auth-tab {
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      font-size: 0.8rem;
-      padding: 0.25rem 0.9rem;
-      border-radius: 999px;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .auth-tab.active {
-      background: var(--accent-soft);
-      color: var(--accent);
-    }
-
-    .hint {
-      font-size: 0.8rem;
-      color: var(--muted);
-      margin-top: 0.4rem;
-    }
-
-    .error {
-      font-size: 0.8rem;
-      color: var(--error);
-      margin-top: 0.25rem;
-    }
-
-    .answers {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-      margin: 0.6rem 0 1rem;
-    }
-
-    .answer-btn {
-      border-radius: 10px;
-      padding: 0.55rem 0.8rem;
-      border: 1px solid rgba(148,163,184,0.35);
-      background: rgba(15,23,42,0.9);
-      color: var(--text);
-      text-align: left;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: var(--transition);
-    }
-
-    .answer-btn:hover { background: rgba(15,23,42,1); }
-
-    .answer-btn.correct {
-      border-color: #22c55e;
-      background: rgba(34,197,94,0.22);
-    }
-
-    .answer-btn.wrong {
-      border-color: #f97373;
-      background: rgba(248,113,113,0.18);
-    }
-
-    footer {
-      text-align: center;
-      padding: 0.8rem 1rem 1.2rem;
-      font-size: 0.75rem;
-      color: rgba(148,163,184,0.7);
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @media (max-width: 640px) {
-      header.topbar {
-        flex-wrap: wrap;
-        gap: 0.5rem;
+    @media (max-width: 600px) {
+      .app-shell {
+        padding: 1.6rem 1.35rem 1.8rem;
+        border-radius: 1.25rem;
       }
-      .topnav {
-        order: 3;
-        width: 100%;
+
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .auth-pill {
+        align-self: stretch;
+        justify-content: space-between;
+      }
+
+      .newsletter-card {
+        padding: 1.2rem 1rem 1.15rem;
+      }
+
+      .newsletter-form {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .btn-primary,
+      .btn-ghost {
         justify-content: center;
+        width: 100%;
       }
-      .auth-area {
-        margin-left: auto;
+
+      .meta-row {
+        flex-direction: column;
+        align-items: flex-start;
       }
     }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="logo">CodeRoute+</div>
-    <nav class="topnav">
-      <button class="nav-btn active" data-target="quiz-view" id="nav-quiz">Quiz</button>
-      <button class="nav-btn" data-target="progress-view" id="nav-progress">Progression</button>
-    </nav>
-    <div class="auth-area">
-      <span id="user-email"></span>
-      <button id="btn-logout" class="btn secondary">Déconnexion</button>
-    </div>
-  </header>
-
-  <main>
-    <!-- Auth -->
-    <section id="auth-view" class="view active">
-      <h1>Apprends le code de la route</h1>
-      <p>Crée un compte pour suivre ta progression.</p>
-
-      <div class="auth-tabs">
-        <button class="auth-tab active" data-mode="signin">Connexion</button>
-        <button class="auth-tab" data-mode="signup">Inscription</button>
-      </div>
-
-      <form id="auth-form" class="card">
-        <div class="field">
-          <label for="auth-email">Email</label>
-          <input type="email" id="auth-email" required />
+  <div class="app-shell">
+    <header>
+      <div class="brand">
+        <div class="brand-logo">
+          <div class="brand-dot"></div>
         </div>
-        <div class="field">
-          <label for="auth-password">Mot de passe</label>
-          <input type="password" id="auth-password" required />
+        <div>
+          <div class="brand-title">Mailing list Supabase</div>
+          <div class="brand-sub">Collecte d'emails ultra simple</div>
         </div>
-        <button type="submit" class="btn primary" id="auth-submit">
-          Se connecter
-        </button>
-        <p class="hint" id="auth-hint"></p>
-        <p class="error" id="auth-error"></p>
-      </form>
-    </section>
-
-    <!-- Quiz -->
-    <section id="quiz-view" class="view">
-      <h1>Questions de code</h1>
-      <div id="quiz-card" class="card">
-        <div id="quiz-question">Connecte-toi pour commencer le quiz.</div>
-        <div id="quiz-answers" class="answers"></div>
-
-        <button id="quiz-next" class="btn primary" disabled>
-          Question suivante
-        </button>
-        <p id="quiz-feedback" class="hint"></p>
       </div>
-    </section>
 
-    <!-- Progression -->
-    <section id="progress-view" class="view">
-      <h1>Ta progression</h1>
-      <div class="card">
-        <p>Total de questions répondues : <span id="prog-total">0</span></p>
-        <p>Bonnes réponses : <span id="prog-correct">0</span></p>
-        <p>Taux de réussite : <span id="prog-rate">0%</span></p>
+      <div class="auth-pill">
+        <span id="userEmail"></span>
+        <button class="btn-small" id="btnAuth">Se connecter</button>
+        <button class="btn-small" id="btnLogout" style="display:none;">Se déconnecter</button>
       </div>
-    </section>
-  </main>
+    </header>
 
-  <footer>
-    <small>Projet perso – entraînement code de la route</small>
-  </footer>
+    <main>
+      <section class="hero">
+        <div class="hero-kicker">
+          <div class="hero-kicker-dot"></div>
+          <span>Base de données Supabase + RLS</span>
+        </div>
+        <h1>Inscris tes visiteurs à une newsletter en 2 clics.</h1>
+        <p class="hero-sub">
+          Ce formulaire enregistre les emails dans une table <code>subscribers</code> de ton projet Supabase.
+          Tu peux ensuite envoyer des campagnes depuis une fonction ou un outil externe.
+        </p>
+      </section>
+
+      <section class="newsletter-card">
+        <div class="newsletter-inner">
+          <div>
+            <div class="newsletter-title">Reçois les nouveautés</div>
+            <p class="newsletter-text">
+              Laisse ton email pour recevoir les futures mises à jour, tips et ressources. Tu peux te désinscrire quand tu veux.
+            </p>
+          </div>
+
+          <form id="subscribeForm" class="newsletter-form">
+            <input
+              id="emailInput"
+              type="email"
+              placeholder="ton@email.com"
+              autocomplete="email"
+              required
+            />
+            <button type="submit" class="btn-primary" id="subscribeBtn">
+              S'inscrire
+            </button>
+            <button type="button" class="btn-ghost" id="unsubscribeBtn">
+              Se désinscrire
+            </button>
+          </form>
+
+          <p id="statusMsg" class="status muted">Ton email reste privé dans la base Supabase.</p>
+
+          <div class="meta-row">
+            <div class="meta-chip">
+              <div class="meta-dot"></div>
+              <span id="authStateLabel">Non connecté (insertion possible si tu autorises public)</span>
+            </div>
+            <span>Table : <code>subscribers(email, user_id, created_at)</code></span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <script>
-    // ---------- CONFIG SUPABASE ----------
-    const SUPABASE_URL = "https://oxzmgnormcofcvasluha.supabase.co";
-    const SUPABASE_ANON_KEY =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94em1nbm9ybWNvZmN2YXNsdWhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzOTg1MjIsImV4cCI6MjA4Njk3NDUyMn0.yDovvFpUdHu-n_NvbBW5-uMmf5JvUNrdfZMHZqNMmaA";
+    // 1) Initialisation Supabase
+    const supabaseUrl = 'https://oxzmgnormcofcvasluha.supabase.co';
+    const supabaseKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94em1nbm9ybWNvZmN2YXNsdWhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzOTg1MjIsImV4cCI6MjA4Njk3NDUyMn0.yDovvFpUdHu-n_NvbBW5-uMmf5JvUNrdfZMHZqNMmaA';
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); // [web:21][web:25]
+    const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    // ---------- ÉTAT GLOBAL ----------
+    // 2) Références DOM
+    const emailInput = document.getElementById('emailInput');
+    const statusMsg = document.getElementById('statusMsg');
+    const subscribeForm = document.getElementById('subscribeForm');
+    const unsubscribeBtn = document.getElementById('unsubscribeBtn');
+    const btnAuth = document.getElementById('btnAuth');
+    const btnLogout = document.getElementById('btnLogout');
+    const userEmailSpan = document.getElementById('userEmail');
+    const authStateLabel = document.getElementById('authStateLabel');
+
     let currentUser = null;
-    let currentMode = "signin";
-    let currentQuestionIndex = 0;
-    let hasAnswered = false;
 
-    // Questions originales inspirées des thèmes officiels (pas celles de Codes Rousseau). [web:35][web:38]
-    const questions = [
-      // LIMITATIONS DE VITESSE
-      {
-        id: 1,
-        text: "Par temps sec, sur une route à double sens sans séparateur central, la vitesse maximale pour une voiture avec plus de 2 ans de permis est :",
-        answers: [
-          "80 km/h",
-          "90 km/h",
-          "100 km/h",
-          "110 km/h"
-        ],
-        correctIndex: 0
-      },
-      {
-        id: 2,
-        text: "Par temps de pluie, sur autoroute, la vitesse maximale est généralement :",
-        answers: [
-          "90 km/h",
-          "100 km/h",
-          "110 km/h",
-          "130 km/h"
-        ],
-        correctIndex: 2
-      },
-      // PRIORITÉS
-      {
-        id: 3,
-        text: "À une intersection sans panneau ni marquage, je dois céder le passage :",
-        answers: [
-          "Aux véhicules venant de ma gauche",
-          "Aux véhicules venant de ma droite",
-          "Aux véhicules les plus rapides",
-          "À personne, je suis prioritaire"
-        ],
-        correctIndex: 1
-      },
-      {
-        id: 4,
-        text: "Je suis sur une route prioritaire signalée par un panneau losange jaune. À la prochaine intersection :",
-        answers: [
-          "Je dois toujours céder le passage",
-          "Je reste prioritaire tant que le panneau de fin de priorité n’est pas présent",
-          "Je suis prioritaire uniquement à droite",
-          "Je dois m’arrêter à chaque intersection"
-        ],
-        correctIndex: 1
-      },
-      // PANNEAUX
-      {
-        id: 5,
-        text: "Un panneau rond à bord rouge avec une valeur « 50 » signifie :",
-        answers: [
-          "Vitesse conseillée à 50 km/h",
-          "Vitesse maximale autorisée à 50 km/h",
-          "Interdiction de circuler à plus de 50 m",
-          "Vitesse minimale obligatoire 50 km/h"
-        ],
-        correctIndex: 1
-      },
-      {
-        id: 6,
-        text: "Un panneau triangulaire à bord rouge avec un symbole de cerf indique :",
-        answers: [
-          "Interdiction d’entrer avec des animaux",
-          "Présence possible d’animaux sauvages sur une certaine distance",
-          "Parking réservé aux chasseurs",
-          "Zone de pique-nique"
-        ],
-        correctIndex: 1
-      },
-      // SÉCURITÉ
-      {
-        id: 7,
-        text: "En cas de brouillard dense (visibilité inférieure à 50 m), sur autoroute, la vitesse maximale est :",
-        answers: [
-          "50 km/h",
-          "70 km/h",
-          "80 km/h",
-          "90 km/h"
-        ],
-        correctIndex: 0
-      },
-      {
-        id: 8,
-        text: "Pour être correctement protégé par la ceinture, je dois :",
-        answers: [
-          "Placer la sangle ventrale sur le ventre",
-          "Placer la sangle diagonale sous le bras",
-          "Plaquer la sangle ventrale au niveau du bassin et la diagonale au milieu de l’épaule",
-          "Croiser les sangles pour plus de maintien"
-        ],
-        correctIndex: 2
-      },
-      // ALCOOL / FATIGUE
-      {
-        id: 9,
-        text: "Après avoir bu de l’alcool, la capacité de réaction du conducteur :",
-        answers: [
-          "S’améliore",
-          "Reste identique",
-          "Se dégrade",
-          "Ne change qu’au-delà de 2 verres"
-        ],
-        correctIndex: 2
-      },
-      {
-        id: 10,
-        text: "En cas de forte somnolence au volant, la meilleure solution est :",
-        answers: [
-          "Ouvrir la fenêtre et monter le son de la radio",
-          "Boire un café et continuer sur une longue distance",
-          "S’arrêter pour dormir même une courte sieste",
-          "Rouler plus vite pour arriver plus tôt"
-        ],
-        correctIndex: 2
-      }
-    ];
-
-    // ---------- SELECTION DOM ----------
-    const views = {
-      auth: document.getElementById("auth-view"),
-      quiz: document.getElementById("quiz-view"),
-      progress: document.getElementById("progress-view")
-    };
-
-    const navButtons = document.querySelectorAll(".nav-btn");
-    const userEmailSpan = document.getElementById("user-email");
-    const logoutBtn = document.getElementById("btn-logout");
-
-    const authTabs = document.querySelectorAll(".auth-tab");
-    const authForm = document.getElementById("auth-form");
-    const authEmail = document.getElementById("auth-email");
-    const authPassword = document.getElementById("auth-password");
-    const authSubmit = document.getElementById("auth-submit");
-    const authHint = document.getElementById("auth-hint");
-    const authError = document.getElementById("auth-error");
-
-    const quizQuestion = document.getElementById("quiz-question");
-    const quizAnswers = document.getElementById("quiz-answers");
-    const quizNextBtn = document.getElementById("quiz-next");
-    const quizFeedback = document.getElementById("quiz-feedback");
-
-    const progTotal = document.getElementById("prog-total");
-    const progCorrect = document.getElementById("prog-correct");
-    const progRate = document.getElementById("prog-rate");
-
-    // ---------- NAV / VUES ----------
-    function showView(name) {
-      Object.values(views).forEach(v => v.classList.remove("active"));
-
-      if (!currentUser) {
-        views.auth.classList.add("active");
-        return;
-      }
-
-      if (name === "quiz") views.quiz.classList.add("active");
-      else if (name === "progress") views.progress.classList.add("active");
-      else views.quiz.classList.add("active");
-
-      navButtons.forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.target === name + "-view");
-      });
+    function setStatus(message, type = 'muted') {
+      statusMsg.textContent = message;
+      statusMsg.className = 'status ' + type;
     }
 
-    navButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        const target = btn.dataset.target.replace("-view", "");
-        showView(target);
-        if (target === "progress") {
-          loadProgress();
-        }
-      });
-    });
+    // 3) Gestion auth très simple (OTP email)
+    async function refreshUser() {
+      const { data } = await client.auth.getUser();
+      currentUser = data?.user ?? null;
 
-    // ---------- AUTH UI ----------
-    authTabs.forEach(tab => {
-      tab.addEventListener("click", () => {
-        authTabs.forEach(t => t.classList.remove("active"));
-        tab.classList.add("active");
-        currentMode = tab.dataset.mode;
-        authError.textContent = "";
-        authHint.textContent =
-          currentMode === "signin"
-            ? "Entre ton email et ton mot de passe pour te connecter."
-            : "Crée un compte avec un email valide. Tu recevras peut‑être un email de confirmation.";
-        authSubmit.textContent =
-          currentMode === "signin" ? "Se connecter" : "Créer un compte";
-      });
-    });
-
-    // ---------- AUTH LOGIC ----------
-    authForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      authError.textContent = "";
-      authHint.textContent = "";
-      authSubmit.disabled = true;
-
-      const email = authEmail.value.trim();
-      const password = authPassword.value.trim();
-
-      try {
-        if (currentMode === "signup") {
-          const { data, error } = await supabase.auth.signUp({ email, password }); // [web:26]
-          if (error) throw error;
-          authHint.textContent =
-            "Compte créé. Vérifie éventuellement ton email puis connecte‑toi.";
-        } else {
-          const { data, error } = await supabase.auth.signInWithPassword({ email, password }); // [web:12]
-          if (error) throw error;
-          currentUser = data.user;
-          userEmailSpan.textContent = currentUser.email;
-          authEmail.value = "";
-          authPassword.value = "";
-          logoutBtn.style.display = "inline-flex";
-          initAfterLogin();
-        }
-      } catch (err) {
-        authError.textContent = err.message || "Une erreur est survenue.";
-      } finally {
-        authSubmit.disabled = false;
-      }
-    });
-
-    logoutBtn.addEventListener("click", async () => {
-      await supabase.auth.signOut(); // [web:39]
-      currentUser = null;
-      userEmailSpan.textContent = "";
-      logoutBtn.style.display = "none";
-      quizQuestion.textContent = "Connecte-toi pour commencer le quiz.";
-      quizAnswers.innerHTML = "";
-      quizNextBtn.disabled = true;
-      quizFeedback.textContent = "";
-      progTotal.textContent = "0";
-      progCorrect.textContent = "0";
-      progRate.textContent = "0%";
-      showView("auth");
-    });
-
-    // Sur changement de session (refresh, etc.) [web:21][web:36]
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        currentUser = session.user;
+      if (currentUser) {
         userEmailSpan.textContent = currentUser.email;
-        logoutBtn.style.display = "inline-flex";
-        initAfterLogin();
+        btnAuth.style.display = 'none';
+        btnLogout.style.display = 'inline-flex';
+        authStateLabel.textContent = 'Connecté : ton email est lié à ton compte (RLS par user_id).';
       } else {
-        currentUser = null;
-        userEmailSpan.textContent = "";
-        logoutBtn.style.display = "none";
-        showView("auth");
+        userEmailSpan.textContent = '';
+        btnAuth.style.display = 'inline-flex';
+        btnLogout.style.display = 'none';
+        authStateLabel.textContent = 'Non connecté (insertion possible si tu autorises public).';
+      }
+    }
+
+    btnAuth.addEventListener('click', async () => {
+      const email = prompt("Entre ton email pour recevoir un code de connexion :");
+      if (!email) return;
+
+      // OTP simple (demande que tu aies configuré l’email OTP côté Supabase)
+      const { error } = await client.auth.signInWithOtp({ email });
+      if (error) {
+        alert('Erreur envoi code : ' + error.message);
+        return;
+      }
+      const token = prompt("Code reçu par email :");
+      if (!token) return;
+
+      const { error: verifyError } = await client.auth.verifyOtp({ email, token, type: 'email' });
+      if (verifyError) {
+        alert('Code invalide : ' + verifyError.message);
+      } else {
+        await refreshUser();
+        alert('Connecté !');
       }
     });
 
-    // ---------- INIT UTILISATEUR ----------
-    async function initAfterLogin() {
-      showView("quiz");
-      await ensureProgressRow();
-      await loadProgress();
-      loadQuestion(0);
-    }
-
-    // ---------- PROGRESSION ----------
-    async function ensureProgressRow() {
-      if (!currentUser) return;
-
-      const { data, error } = await supabase
-        .from("progress")
-        .select("*")
-        .eq("user_id", currentUser.id)
-        .maybeSingle(); // [web:22]
-
-      if (error) {
-        console.error(error);
-        return;
-      }
-
-      if (!data) {
-        await supabase.from("progress").insert({
-          user_id: currentUser.id,
-          total_questions: 0,
-          correct_answers: 0
-        });
-      }
-    }
-
-    async function updateProgress(isCorrect) {
-      if (!currentUser) return;
-
-      const { data, error } = await supabase
-        .from("progress")
-        .select("*")
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error(error);
-        return;
-      }
-
-      const total = (data?.total_questions || 0) + 1;
-      const correct = (data?.correct_answers || 0) + (isCorrect ? 1 : 0);
-
-      await supabase
-        .from("progress")
-        .update({ total_questions: total, correct_answers: correct })
-        .eq("user_id", currentUser.id);
-
-      await loadProgress();
-    }
-
-    async function loadProgress() {
-      if (!currentUser) return;
-
-      const { data, error } = await supabase
-        .from("progress")
-        .select("*")
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
-
-      if (error || !data) {
-        progTotal.textContent = "0";
-        progCorrect.textContent = "0";
-        progRate.textContent = "0%";
-        return;
-      }
-
-      const { total_questions, correct_answers } = data;
-      progTotal.textContent = total_questions;
-      progCorrect.textContent = correct_answers;
-      const rate =
-        total_questions > 0
-          ? Math.round((correct_answers / total_questions) * 100)
-          : 0;
-      progRate.textContent = rate + "%";
-    }
-
-    // ---------- QUIZ ----------
-    function loadQuestion(index) {
-      if (!currentUser) {
-        quizQuestion.textContent = "Connecte-toi pour commencer le quiz.";
-        quizAnswers.innerHTML = "";
-        quizNextBtn.disabled = true;
-        quizFeedback.textContent = "";
-        return;
-      }
-
-      if (index >= questions.length) {
-        currentQuestionIndex = 0;
-      } else {
-        currentQuestionIndex = index;
-      }
-      const q = questions[currentQuestionIndex];
-      quizQuestion.textContent = q.text;
-      quizAnswers.innerHTML = "";
-      quizFeedback.textContent = "";
-      quizNextBtn.disabled = true;
-      hasAnswered = false;
-
-      q.answers.forEach((answer, i) => {
-        const btn = document.createElement("button");
-        btn.className = "answer-btn";
-        btn.textContent = answer;
-        btn.addEventListener("click", () => handleAnswer(i));
-        quizAnswers.appendChild(btn);
-      });
-    }
-
-    function handleAnswer(selectedIndex) {
-      if (hasAnswered) return;
-      hasAnswered = true;
-
-      const q = questions[currentQuestionIndex];
-      const allButtons = quizAnswers.querySelectorAll(".answer-btn");
-
-      allButtons.forEach((btn, i) => {
-        btn.disabled = true;
-        if (i === q.correctIndex) {
-          btn.classList.add("correct");
-        }
-        if (i === selectedIndex && i !== q.correctIndex) {
-          btn.classList.add("wrong");
-        }
-      });
-
-      const isCorrect = selectedIndex === q.correctIndex;
-      quizFeedback.textContent = isCorrect
-        ? "Bonne réponse !"
-        : "Mauvaise réponse, prends le temps de revoir ce thème.";
-
-      quizNextBtn.disabled = false;
-
-      updateProgress(isCorrect);
-    }
-
-    quizNextBtn.addEventListener("click", () => {
-      loadQuestion(currentQuestionIndex + 1);
+    btnLogout.addEventListener('click', async () => {
+      await client.auth.signOut();
+      await refreshUser();
     });
 
-    // ---------- DEMARRAGE ----------
-    showView("auth");
-    authHint.textContent =
-      "Entre ton email et ton mot de passe pour te connecter.";
+    // 4) Inscription à la mailing list
+    subscribeForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+      if (!email) {
+        setStatus("Entre un email valide.", "error");
+        return;
+      }
+
+      setStatus("Vérification en cours...", "muted");
+
+      // Vérifier si déjà inscrit
+      const { data: existing, error: checkError } = await client
+        .from('subscribers')
+        .select('email')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (checkError) {
+        setStatus("Erreur de vérification : " + checkError.message, "error");
+        return;
+      }
+
+      if (existing) {
+        setStatus("Cet email est déjà inscrit.", "error");
+        return;
+      }
+
+      const userId = currentUser?.id ?? null;
+
+      const { error: insertError } = await client
+        .from('subscribers')
+        .insert({ email, user_id: userId });
+
+      if (insertError) {
+        setStatus("Erreur lors de l'inscription : " + insertError.message, "error");
+      } else {
+        setStatus("Inscription réussie, merci !", "success");
+        emailInput.value = "";
+      }
+    });
+
+    // 5) Désinscription
+    unsubscribeBtn.addEventListener('click', async () => {
+      const email = emailInput.value.trim();
+      if (!email) {
+        setStatus("Entre l'email à désinscrire.", "error");
+        return;
+      }
+
+      setStatus("Désinscription en cours...", "muted");
+
+      const { error } = await client
+        .from('subscribers')
+        .delete()
+        .eq('email', email);
+
+      if (error) {
+        setStatus("Erreur lors de la désinscription : " + error.message, "error");
+      } else {
+        setStatus("Désinscrit (si l'email existait).", "success");
+        emailInput.value = "";
+      }
+    });
+
+    // 6) Démarrage
+    (async () => {
+      await refreshUser();
+    })();
   </script>
 </body>
 </html>
