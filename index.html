@@ -2,522 +2,46 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Mailing list Supabase – Démo</title>
+  <title>Mailing list Supabase</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Supabase JS v2 (CDN) -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
-  <style>
-    :root {
-      --bg: #0f172a;
-      --bg-soft: #111827;
-      --accent: #6366f1;
-      --accent-soft: #4f46e5;
-      --text-main: #e5e7eb;
-      --text-soft: #9ca3af;
-      --error: #f97373;
-      --success: #22c55e;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-    }
-
-    body {
-      min-height: 100vh;
-      background: radial-gradient(circle at top, #1e293b 0, #020617 60%);
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem 1rem;
-    }
-
-    .app-shell {
-      width: 100%;
-      max-width: 720px;
-      background: linear-gradient(145deg, rgba(15,23,42,0.96), rgba(15,23,42,0.98));
-      border-radius: 1.5rem;
-      padding: 2rem 1.75rem 2.25rem;
-      box-shadow:
-        0 24px 60px rgba(15,23,42,0.85),
-        0 0 0 1px rgba(148,163,184,0.12);
-      backdrop-filter: blur(18px);
-      border: 1px solid rgba(148,163,184,0.25);
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1.75rem;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .brand-logo {
-      width: 34px;
-      height: 34px;
-      border-radius: 0.9rem;
-      background: conic-gradient(
-        from 160deg,
-        #4f46e5,
-        #06b6d4,
-        #22c55e,
-        #eab308,
-        #f97316,
-        #ec4899,
-        #4f46e5
-      );
-      position: relative;
-      overflow: hidden;
-    }
-
-    .brand-logo::after {
-      content: "";
-      position: absolute;
-      inset: 2px;
-      border-radius: 0.8rem;
-      background: radial-gradient(circle at top left, #1f2937, #020617);
-    }
-
-    .brand-dot {
-      position: absolute;
-      inset: 2px;
-      border-radius: 0.8rem;
-      background: radial-gradient(circle at 25% 0, rgba(248,250,252,0.16), transparent 55%);
-    }
-
-    .brand-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      line-height: 1.1;
-    }
-
-    .brand-sub {
-      font-size: 0.8rem;
-      color: var(--text-soft);
-    }
-
-    .auth-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.4rem 0.8rem;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.7);
-      border: 1px solid rgba(148,163,184,0.4);
-      font-size: 0.8rem;
-      color: var(--text-soft);
-    }
-
-    .auth-pill span {
-      max-width: 170px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .btn-small {
-      border: none;
-      border-radius: 999px;
-      padding: 0.35rem 0.75rem;
-      font-size: 0.75rem;
-      cursor: pointer;
-      background: rgba(79,70,229,0.08);
-      color: #c7d2fe;
-    }
-
-    .btn-small:hover {
-      background: rgba(79,70,229,0.16);
-    }
-
-    main {
-      display: grid;
-      gap: 1.75rem;
-    }
-
-    .hero {
-      text-align: left;
-    }
-
-    .hero-kicker {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.75rem;
-      color: var(--text-soft);
-      padding: 0.2rem 0.7rem;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.9);
-      border: 1px solid rgba(148,163,184,0.25);
-      margin-bottom: 0.8rem;
-    }
-
-    .hero-kicker-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: #22c55e;
-      box-shadow: 0 0 0 4px rgba(34,197,94,0.28);
-    }
-
-    h1 {
-      font-size: 1.7rem;
-      line-height: 1.2;
-      margin-bottom: 0.6rem;
-    }
-
-    .hero-sub {
-      font-size: 0.9rem;
-      color: var(--text-soft);
-      max-width: 460px;
-    }
-
-    /* Bloc newsletter */
-    .newsletter-card {
-      border-radius: 1.25rem;
-      background: radial-gradient(circle at top left, rgba(79,70,229,0.22), rgba(15,23,42,0.97));
-      padding: 1.4rem 1.3rem 1.35rem;
-      border: 1px solid rgba(129,140,248,0.4);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .newsletter-card::before {
-      content: "";
-      position: absolute;
-      inset: -40%;
-      background:
-        radial-gradient(circle at 0 0, rgba(59,130,246,0.3), transparent 55%),
-        radial-gradient(circle at 80% 0, rgba(236,72,153,0.35), transparent 60%);
-      opacity: 0.18;
-      pointer-events: none;
-    }
-
-    .newsletter-inner {
-      position: relative;
-      display: grid;
-      gap: 0.8rem;
-      z-index: 1;
-    }
-
-    .newsletter-title {
-      font-size: 1rem;
-      font-weight: 600;
-    }
-
-    .newsletter-text {
-      font-size: 0.85rem;
-      color: #e5e7eb;
-      max-width: 420px;
-    }
-
-    .newsletter-form {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-      align-items: center;
-    }
-
-    .newsletter-form input[type="email"] {
-      flex: 1 1 180px;
-      min-width: 0;
-      padding: 0.65rem 0.75rem;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.6);
-      background: rgba(15,23,42,0.92);
-      color: var(--text-main);
-      font-size: 0.85rem;
-      outline: none;
-    }
-
-    .newsletter-form input[type="email"]::placeholder {
-      color: rgba(148,163,184,0.9);
-    }
-
-    .btn-primary,
-    .btn-ghost {
-      border-radius: 999px;
-      padding: 0.65rem 1.05rem;
-      border: none;
-      font-size: 0.85rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      white-space: nowrap;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #6366f1, #4f46e5);
-      color: #e5e7eb;
-      box-shadow:
-        0 10px 25px rgba(79,70,229,0.55),
-        0 0 0 1px rgba(191,219,254,0.25);
-    }
-
-    .btn-primary:hover {
-      background: linear-gradient(135deg, #4f46e5, #4338ca);
-      transform: translateY(-0.5px);
-    }
-
-    .btn-ghost {
-      background: rgba(15,23,42,0.9);
-      color: var(--text-soft);
-      border: 1px solid rgba(148,163,184,0.55);
-    }
-
-    .btn-ghost:hover {
-      background: rgba(15,23,42,1);
-    }
-
-    .status {
-      font-size: 0.8rem;
-      min-height: 1.15rem;
-      color: var(--text-soft);
-      margin-top: 0.35rem;
-    }
-
-    .status.error {
-      color: var(--error);
-    }
-
-    .status.success {
-      color: var(--success);
-    }
-
-    .status.muted {
-      opacity: 0.85;
-    }
-
-    .meta-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 0.5rem;
-      font-size: 0.75rem;
-      color: var(--text-soft);
-      margin-top: 0.85rem;
-      flex-wrap: wrap;
-    }
-
-    .meta-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      padding: 0.3rem 0.65rem;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.92);
-      border: 1px solid rgba(148,163,184,0.4);
-    }
-
-    .meta-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: #38bdf8;
-    }
-
-    @media (max-width: 600px) {
-      .app-shell {
-        padding: 1.6rem 1.35rem 1.8rem;
-        border-radius: 1.25rem;
-      }
-
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .auth-pill {
-        align-self: stretch;
-        justify-content: space-between;
-      }
-
-      .newsletter-card {
-        padding: 1.2rem 1rem 1.15rem;
-      }
-
-      .newsletter-form {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .btn-primary,
-      .btn-ghost {
-        justify-content: center;
-        width: 100%;
-      }
-
-      .meta-row {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
-  </style>
 </head>
 <body>
-  <div class="app-shell">
-    <header>
-      <div class="brand">
-        <div class="brand-logo">
-          <div class="brand-dot"></div>
-        </div>
-        <div>
-          <div class="brand-title">Mailing list Supabase</div>
-          <div class="brand-sub">Collecte d'emails ultra simple</div>
-        </div>
-      </div>
+  <h1>Inscription à la newsletter</h1>
 
-      <div class="auth-pill">
-        <span id="userEmail"></span>
-        <button class="btn-small" id="btnAuth">Se connecter</button>
-        <button class="btn-small" id="btnLogout" style="display:none;">Se déconnecter</button>
-      </div>
-    </header>
+  <form id="subscribeForm">
+    <input
+      id="emailInput"
+      type="email"
+      placeholder="Ton email"
+      required
+    />
+    <button type="submit">S'inscrire</button>
+  </form>
 
-    <main>
-      <section class="hero">
-        <div class="hero-kicker">
-          <div class="hero-kicker-dot"></div>
-          <span>Base de données Supabase + RLS</span>
-        </div>
-        <h1>Inscris tes visiteurs à une newsletter en 2 clics.</h1>
-        <p class="hero-sub">
-          Ce formulaire enregistre les emails dans une table <code>subscribers</code> de ton projet Supabase.
-          Tu peux ensuite envoyer des campagnes depuis une fonction ou un outil externe.
-        </p>
-      </section>
-
-      <section class="newsletter-card">
-        <div class="newsletter-inner">
-          <div>
-            <div class="newsletter-title">Reçois les nouveautés</div>
-            <p class="newsletter-text">
-              Laisse ton email pour recevoir les futures mises à jour, tips et ressources. Tu peux te désinscrire quand tu veux.
-            </p>
-          </div>
-
-          <form id="subscribeForm" class="newsletter-form">
-            <input
-              id="emailInput"
-              type="email"
-              placeholder="ton@email.com"
-              autocomplete="email"
-              required
-            />
-            <button type="submit" class="btn-primary" id="subscribeBtn">
-              S'inscrire
-            </button>
-            <button type="button" class="btn-ghost" id="unsubscribeBtn">
-              Se désinscrire
-            </button>
-          </form>
-
-          <p id="statusMsg" class="status muted">Ton email reste privé dans la base Supabase.</p>
-
-          <div class="meta-row">
-            <div class="meta-chip">
-              <div class="meta-dot"></div>
-              <span id="authStateLabel">Non connecté (insertion possible si tu autorises public)</span>
-            </div>
-            <span>Table : <code>subscribers(email, user_id, created_at)</code></span>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
+  <p id="statusMsg"></p>
 
   <script>
-    // 1) Initialisation Supabase
+    // Supabase
     const supabaseUrl = 'https://oxzmgnormcofcvasluha.supabase.co';
     const supabaseKey =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94em1nbm9ybWNvZmN2YXNsdWhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzOTg1MjIsImV4cCI6MjA4Njk3NDUyMn0.yDovvFpUdHu-n_NvbBW5-uMmf5JvUNrdfZMHZqNMmaA';
 
     const client = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    // 2) Références DOM
+    const form = document.getElementById('subscribeForm');
     const emailInput = document.getElementById('emailInput');
     const statusMsg = document.getElementById('statusMsg');
-    const subscribeForm = document.getElementById('subscribeForm');
-    const unsubscribeBtn = document.getElementById('unsubscribeBtn');
-    const btnAuth = document.getElementById('btnAuth');
-    const btnLogout = document.getElementById('btnLogout');
-    const userEmailSpan = document.getElementById('userEmail');
-    const authStateLabel = document.getElementById('authStateLabel');
 
-    let currentUser = null;
-
-    function setStatus(message, type = 'muted') {
-      statusMsg.textContent = message;
-      statusMsg.className = 'status ' + type;
-    }
-
-    // 3) Gestion auth très simple (OTP email)
-    async function refreshUser() {
-      const { data } = await client.auth.getUser();
-      currentUser = data?.user ?? null;
-
-      if (currentUser) {
-        userEmailSpan.textContent = currentUser.email;
-        btnAuth.style.display = 'none';
-        btnLogout.style.display = 'inline-flex';
-        authStateLabel.textContent = 'Connecté : ton email est lié à ton compte (RLS par user_id).';
-      } else {
-        userEmailSpan.textContent = '';
-        btnAuth.style.display = 'inline-flex';
-        btnLogout.style.display = 'none';
-        authStateLabel.textContent = 'Non connecté (insertion possible si tu autorises public).';
-      }
-    }
-
-    btnAuth.addEventListener('click', async () => {
-      const email = prompt("Entre ton email pour recevoir un code de connexion :");
-      if (!email) return;
-
-      // OTP simple (demande que tu aies configuré l’email OTP côté Supabase)
-      const { error } = await client.auth.signInWithOtp({ email });
-      if (error) {
-        alert('Erreur envoi code : ' + error.message);
-        return;
-      }
-      const token = prompt("Code reçu par email :");
-      if (!token) return;
-
-      const { error: verifyError } = await client.auth.verifyOtp({ email, token, type: 'email' });
-      if (verifyError) {
-        alert('Code invalide : ' + verifyError.message);
-      } else {
-        await refreshUser();
-        alert('Connecté !');
-      }
-    });
-
-    btnLogout.addEventListener('click', async () => {
-      await client.auth.signOut();
-      await refreshUser();
-    });
-
-    // 4) Inscription à la mailing list
-    subscribeForm.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = emailInput.value.trim();
       if (!email) {
-        setStatus("Entre un email valide.", "error");
+        statusMsg.textContent = "Entre un email.";
         return;
       }
 
-      setStatus("Vérification en cours...", "muted");
+      statusMsg.textContent = "Vérification...";
 
       // Vérifier si déjà inscrit
       const { data: existing, error: checkError } = await client
@@ -527,56 +51,27 @@
         .maybeSingle();
 
       if (checkError) {
-        setStatus("Erreur de vérification : " + checkError.message, "error");
+        statusMsg.textContent = "Erreur de vérification : " + checkError.message;
         return;
       }
 
       if (existing) {
-        setStatus("Cet email est déjà inscrit.", "error");
+        statusMsg.textContent = "Cet email est déjà inscrit.";
         return;
       }
 
-      const userId = currentUser?.id ?? null;
-
+      // Inscription
       const { error: insertError } = await client
         .from('subscribers')
-        .insert({ email, user_id: userId });
+        .insert({ email });
 
       if (insertError) {
-        setStatus("Erreur lors de l'inscription : " + insertError.message, "error");
+        statusMsg.textContent = "Erreur lors de l'inscription : " + insertError.message;
       } else {
-        setStatus("Inscription réussie, merci !", "success");
+        statusMsg.textContent = "Inscription réussie, merci !";
         emailInput.value = "";
       }
     });
-
-    // 5) Désinscription
-    unsubscribeBtn.addEventListener('click', async () => {
-      const email = emailInput.value.trim();
-      if (!email) {
-        setStatus("Entre l'email à désinscrire.", "error");
-        return;
-      }
-
-      setStatus("Désinscription en cours...", "muted");
-
-      const { error } = await client
-        .from('subscribers')
-        .delete()
-        .eq('email', email);
-
-      if (error) {
-        setStatus("Erreur lors de la désinscription : " + error.message, "error");
-      } else {
-        setStatus("Désinscrit (si l'email existait).", "success");
-        emailInput.value = "";
-      }
-    });
-
-    // 6) Démarrage
-    (async () => {
-      await refreshUser();
-    })();
   </script>
 </body>
 </html>
