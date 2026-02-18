@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Code de la route – Entraînement</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Supabase JS v2 (CDN) -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-alt: #0b1020;
+      --accent: #3b82f6;
+      --accent-soft: rgba(59,130,246,0.15);
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --error: #f97373;
+      --radius: 12px;
+      --shadow: 0 18px 45px rgba(0,0,0,0.45);
+      --transition: 0.2s ease;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: radial-gradient(circle at top, #111827 0, #020617 50%, #000 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header.topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid rgba(148,163,184,0.2);
+      backdrop-filter: blur(14px);
+      background: linear-gradient(135deg, rgba(15,23,42,0.95), rgba(15,23,42,0.7));
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      font-size: 1rem;
+    }
+
+    .topnav {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .nav-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+
+    .nav-btn:hover {
+      background: rgba(15,23,42,0.8);
+      color: var(--text);
+    }
+
+    .nav-btn.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .auth-area {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    #user-email {
+      color: var(--muted);
+    }
+
+    main {
+      flex: 1;
+      max-width: 960px;
+      width: 100%;
+      margin: 1.5rem auto 2rem;
+      padding: 0 1rem;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    h1 {
+      margin: 0 0 0.9rem;
+      font-size: 1.6rem;
+    }
+
+    p {
+      margin: 0 0 0.75rem;
+      color: var(--muted);
+    }
+
+    .card {
+      margin-top: 1rem;
+      background: radial-gradient(circle at top left, rgba(59,130,246,0.15), rgba(15,23,42,1));
+      border-radius: var(--radius);
+      padding: 1.25rem 1.4rem;
+      border: 1px solid rgba(148,163,184,0.25);
+      box-shadow: var(--shadow);
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 0.75rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      margin-bottom: 0.15rem;
+      color: var(--muted);
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      padding: 0.55rem 0.7rem;
+      border-radius: 8px;
+      border: 1px solid rgba(148,163,184,0.4);
+      background: rgba(15,23,42,0.8);
+      color: var(--text);
+      outline: none;
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(59,130,246,0.5);
+    }
+
+    .btn {
+      border-radius: 999px;
+      padding: 0.45rem 1.1rem;
+      font-size: 0.9rem;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, #3b82f6, #22c55e);
+      color: #0b1020;
+      font-weight: 600;
+    }
+
+    .btn.secondary {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid rgba(148,163,184,0.4);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    .btn.primary:hover:not(:disabled) {
+      filter: brightness(1.1);
+    }
+
+    .btn.secondary:hover {
+      background: rgba(15,23,42,0.8);
+    }
+
+    .auth-tabs {
+      margin: 1rem 0 0.4rem;
+      display: inline-flex;
+      padding: 0.2rem;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(148,163,184,0.35);
+    }
+
+    .auth-tab {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.8rem;
+      padding: 0.25rem 0.9rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .auth-tab.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+    }
+
+    .error {
+      font-size: 0.8rem;
+      color: var(--error);
+      margin-top: 0.25rem;
+    }
+
+    .answers {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin: 0.6rem 0 1rem;
+    }
+
+    .answer-btn {
+      border-radius: 10px;
+      padding: 0.55rem 0.8rem;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(15,23,42,0.9);
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+
+    .answer-btn:hover {
+      background: rgba(15,23,42,1);
+    }
+
+    .answer-btn.correct {
+      border-color: #22c55e;
+      background: rgba(34,197,94,0.22);
+    }
+
+    .answer-btn.wrong {
+      border-color: #f97373;
+      background: rgba(248,113,113,0.18);
+    }
+
+    footer {
+      text-align: center;
+      padding: 0.8rem 1rem 1.2rem;
+      font-size: 0.75rem;
+      color: rgba(148,163,184,0.7);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 640px) {
+      header.topbar {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .topnav {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+      }
+      .auth-area {
+        margin-left: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo">CodeRoute+</div>
+    <nav class="topnav">
+      <button class="nav-btn active" data-target="quiz-view" id="nav-quiz">Quiz</button>
+      <button class="nav-btn" data-target="progress-view" id="nav-progress">Progression</button>
+    </nav>
+    <div class="auth-area">
+      <span id="user-email"></span>
+      <button id="btn-logout" class="btn secondary">Déconnexion</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Auth -->
+    <section id="auth-view" class="view active">
+      <h1>Apprends le code de la route</h1>
+      <p>Crée un compte pour suivre ta progression.</p>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-mode="signin">Connexion</button>
+        <button class="auth-tab" data-mode="signup">Inscription</button>
+      </div>
+
+      <form id="auth-form" class="card">
+        <div class="field">
+          <label for="auth-email">Email</label>
+          <input type="email" id="auth-email" required />
+        </div>
+        <div class="field">
+          <label for="auth-password">Mot de passe</label>
+          <input type="password" id="auth-password" required />
+        </div>
+        <button type="submit" class="btn primary" id="auth-submit">
+          Se connecter
+        </button>
+        <p class="hint" id="auth-hint"></p>
+        <p class="error" id="auth-error"></p>
+      </form>
+    </section>
+
+    <!-- Quiz -->
+    <section id="quiz-view" class="view">
+      <h1>Questions de code</h1>
+      <div id="quiz-card" class="card">
+        <div id="quiz-question">Chargement…</div>
+        <div id="quiz-answers" class="answers"></div>
+
+        <button id="quiz-next" class="btn primary" disabled>
+          Question suivante
+        </button>
+        <p id="quiz-feedback" class="hint"></p>
+      </div>
+    </section>
+
+    <!-- Progression -->
+    <section id="progress-view" class="view">
+      <h1>Ta progression</h1>
+      <div class="card">
+        <p>Total de questions répondues : <span id="prog-total">0</span></p>
+        <p>Bonnes réponses : <span id="prog-correct">0</span></p>
+        <p>Taux de réussite : <span id="prog-rate">0%</span></p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>Projet perso – entraînement code de la route</small>
+  </footer>
+
+  <script>
+    // ---------- CONFIG SUPABASE ----------
+    const SUPABASE_URL = "https://oxzmgnormcofcvasluha.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94em1nbm9ybWNvZmN2YXNsdWhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzOTg1MjIsImV4cCI6MjA4Njk3NDUyMn0.yDovvFpUdHu-n_NvbBW5-uMmf5JvUNrdfZMHZqNMmaA";
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); // [web:21][web:25]
+
+    // ---------- ÉTAT GLOBAL ----------
+    let currentUser = null;
+    let currentMode = "signin";
+    let currentQuestionIndex = 0;
+    let hasAnswered = false;
+
+    const questions = [
+      {
+        id: 1,
+        text: "Sur autoroute, la vitesse maximale pour une voiture particulière par temps sec est :",
+        answers: [
+          "110 km/h",
+          "120 km/h",
+          "130 km/h",
+          "140 km/h",
+        ],
+        correctIndex: 2,
+      },
+      {
+        id: 2,
+        text: "À quel moment devez-vous utiliser vos feux de croisement ?",
+        answers: [
+          "Uniquement la nuit",
+          "La nuit ou lorsque la visibilité est insuffisante",
+          "Uniquement quand il pleut",
+          "Jamais en agglomération",
+        ],
+        correctIndex: 1,
+      },
+      {
+        id: 3,
+        text: "Un panneau triangulaire à bord rouge signifie généralement :",
+        answers: [
+          "Une obligation",
+          "Une interdiction",
+          "Une indication",
+          "Un danger",
+        ],
+        correctIndex: 3,
+      },
+    ];
+
+    // ---------- SELECTION DOM ----------
+    const views = {
+      auth: document.getElementById("auth-view"),
+      quiz: document.getElementById("quiz-view"),
+      progress: document.getElementById("progress-view"),
+    };
+
+    const navButtons = document.querySelectorAll(".nav-btn");
+    const userEmailSpan = document.getElementById("user-email");
+    const logoutBtn = document.getElementById("btn-logout");
+
+    const authTabs = document.querySelectorAll(".auth-tab");
+    const authForm = document.getElementById("auth-form");
+    const authEmail = document.getElementById("auth-email");
+    const authPassword = document.getElementById("auth-password");
+    const authSubmit = document.getElementById("auth-submit");
+    const authHint = document.getElementById("auth-hint");
+    const authError = document.getElementById("auth-error");
+
+    const quizQuestion = document.getElementById("quiz-question");
+    const quizAnswers = document.getElementById("quiz-answers");
+    const quizNextBtn = document.getElementById("quiz-next");
+    const quizFeedback = document.getElementById("quiz-feedback");
+
+    const progTotal = document.getElementById("prog-total");
+    const progCorrect = document.getElementById("prog-correct");
+    const progRate = document.getElementById("prog-rate");
+
+    // ---------- NAV / VUES ----------
+    function showView(name) {
+      Object.values(views).forEach(v => v.classList.remove("active"));
+
+      if (!currentUser) {
+        views.auth.classList.add("active");
+        return;
+      }
+
+      if (name === "quiz") views.quiz.classList.add("active");
+      else if (name === "progress") views.progress.classList.add("active");
+      else views.quiz.classList.add("active");
+
+      navButtons.forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.target === name + "-view");
+      });
+    }
+
+    navButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const target = btn.dataset.target.replace("-view", "");
+        showView(target);
+        if (target === "progress") {
+          loadProgress();
+        }
+      });
+    });
+
+    // ---------- AUTH UI ----------
+    authTabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        authTabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        currentMode = tab.dataset.mode;
+        authError.textContent = "";
+        authHint.textContent = currentMode === "signin"
+          ? "Entre ton email et ton mot de passe pour te connecter."
+          : "Crée un compte avec un email valide. Tu recevras peut‑être un email de confirmation.";
+        authSubmit.textContent = currentMode === "signin"
+          ? "Se connecter"
+          : "Créer un compte";
+      });
+    });
+
+    // ---------- AUTH LOGIC ----------
+    authForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      authError.textContent = "";
+      authHint.textContent = "";
+      authSubmit.disabled = true;
+
+      const email = authEmail.value.trim();
+      const password = authPassword.value.trim();
+
+      try {
+        if (currentMode === "signup") {
+          const { data, error } = await supabase.auth.signUp({ email, password }); // [web:26]
+          if (error) throw error;
+          authHint.textContent = "Compte créé. Vérifie éventuellement ton email puis connecte‑toi.";
+        } else {
+          const { data, error } = await supabase.auth.signInWithPassword({ email, password }); // [web:12]
+          if (error) throw error;
+          currentUser = data.user;
+          userEmailSpan.textContent = currentUser.email;
+          authEmail.value = "";
+          authPassword.value = "";
+          initAfterLogin();
+        }
+      } catch (err) {
+        authError.textContent = err.message || "Une erreur est survenue.";
+      } finally {
+        authSubmit.disabled = false;
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      currentUser = null;
+      userEmailSpan.textContent = "";
+      showView("auth");
+    });
+
+    // Sur changement de session [web:21]
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        currentUser = session.user;
+        userEmailSpan.textContent = currentUser.email;
+        initAfterLogin();
+      } else {
+        currentUser = null;
+        userEmailSpan.textContent = "";
+        showView("auth");
+      }
+    });
+
+    // ---------- INIT UTILISATEUR ----------
+    async function initAfterLogin() {
+      showView("quiz");
+      await ensureProgressRow();
+      loadProgress();
+      loadQuestion(0);
+    }
+
+    // ---------- PROGRESSION ----------
+    async function ensureProgressRow() {
+      if (!currentUser) return;
+
+      const { data, error } = await supabase
+        .from("progress")
+        .select("*")
+        .eq("user_id", currentUser.id)
+        .maybeSingle(); // [web:22]
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      if (!data) {
+        await supabase.from("progress").insert({
+          user_id: currentUser.id,
+          total_questions: 0,
+          correct_answers: 0,
+        });
+      }
+    }
+
+    async function updateProgress(isCorrect) {
+      if (!currentUser) return;
+
+      const { data, error } = await supabase
+        .from("progress")
+        .select("*")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      const total = (data?.total_questions || 0) + 1;
+      const correct = (data?.correct_answers || 0) + (isCorrect ? 1 : 0);
+
+      await supabase
+        .from("progress")
+        .update({ total_questions: total, correct_answers: correct })
+        .eq("user_id", currentUser.id);
+
+      loadProgress();
+    }
+
+    async function loadProgress() {
+      if (!currentUser) return;
+
+      const { data, error } = await supabase
+        .from("progress")
+        .select("*")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+      if (error || !data) {
+        progTotal.textContent = "0";
+        progCorrect.textContent = "0";
+        progRate.textContent = "0%";
+        return;
+      }
+
+      const { total_questions, correct_answers } = data;
+      progTotal.textContent = total_questions;
+      progCorrect.textContent = correct_answers;
+      const rate = total_questions > 0
+        ? Math.round((correct_answers / total_questions) * 100)
+        : 0;
+      progRate.textContent = rate + "%";
+    }
+
+    // ---------- QUIZ ----------
+    function loadQuestion(index) {
+      if (index >= questions.length) {
+        currentQuestionIndex = 0;
+      } else {
+        currentQuestionIndex = index;
+      }
+      const q = questions[currentQuestionIndex];
+      quizQuestion.textContent = q.text;
+      quizAnswers.innerHTML = "";
+      quizFeedback.textContent = "";
+      quizNextBtn.disabled = true;
+      hasAnswered = false;
+
+      q.answers.forEach((answer, i) => {
+        const btn = document.createElement("button");
+        btn.className = "answer-btn";
+        btn.textContent = answer;
+        btn.addEventListener("click", () => handleAnswer(i));
+        quizAnswers.appendChild(btn);
+      });
+    }
+
+    function handleAnswer(selectedIndex) {
+      if (hasAnswered) return;
+      hasAnswered = true;
+
+      const q = questions[currentQuestionIndex];
+      const allButtons = quizAnswers.querySelectorAll(".answer-btn");
+
+      allButtons.forEach((btn, i) => {
+        btn.disabled = true;
+        if (i === q.correctIndex) {
+          btn.classList.add("correct");
+        }
+        if (i === selectedIndex && i !== q.correctIndex) {
+          btn.classList.add("wrong");
+        }
+      });
+
+      const isCorrect = selectedIndex === q.correctIndex;
+      quizFeedback.textContent = isCorrect
+        ? "Bonne réponse !"
+        : "Mauvaise réponse, regarde bien l’explication dans ton manuel de code.";
+
+      quizNextBtn.disabled = false;
+
+      updateProgress(isCorrect);
+    }
+
+    quizNextBtn.addEventListener("click", () => {
+      loadQuestion(currentQuestionIndex + 1);
+    });
+
+    // ---------- DEMARRAGE ----------
+    showView("auth");
+    authHint.textContent = "Entre ton email et ton mot de passe pour te connecter.";
+  </script>
+</body>
+</html>
