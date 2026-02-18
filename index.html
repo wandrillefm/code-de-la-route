@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Code de la route – Entraînement</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Supabase JS v2 (CDN) -->
+  <!-- Supabase JS v2 -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <style>
     :root {
@@ -21,11 +21,7 @@
       --font: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
     }
 
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -93,6 +89,10 @@
       color: var(--muted);
     }
 
+    #btn-logout {
+      display: none; /* masqué par défaut, montré quand connecté */
+    }
+
     main {
       flex: 1;
       max-width: 960px;
@@ -101,10 +101,7 @@
       padding: 0 1rem;
     }
 
-    .view {
-      display: none;
-    }
-
+    .view { display: none; }
     .view.active {
       display: block;
       animation: fadeIn 0.25s ease-out;
@@ -248,9 +245,7 @@
       transition: var(--transition);
     }
 
-    .answer-btn:hover {
-      background: rgba(15,23,42,1);
-    }
+    .answer-btn:hover { background: rgba(15,23,42,1); }
 
     .answer-btn.correct {
       border-color: #22c55e;
@@ -335,7 +330,7 @@
     <section id="quiz-view" class="view">
       <h1>Questions de code</h1>
       <div id="quiz-card" class="card">
-        <div id="quiz-question">Chargement…</div>
+        <div id="quiz-question">Connecte-toi pour commencer le quiz.</div>
         <div id="quiz-answers" class="answers"></div>
 
         <button id="quiz-next" class="btn primary" disabled>
@@ -363,7 +358,8 @@
   <script>
     // ---------- CONFIG SUPABASE ----------
     const SUPABASE_URL = "https://oxzmgnormcofcvasluha.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94em1nbm9ybWNvZmN2YXNsdWhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzOTg1MjIsImV4cCI6MjA4Njk3NDUyMn0.yDovvFpUdHu-n_NvbBW5-uMmf5JvUNrdfZMHZqNMmaA";
+    const SUPABASE_ANON_KEY =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94em1nbm9ybWNvZmN2YXNsdWhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzOTg1MjIsImV4cCI6MjA4Njk3NDUyMn0.yDovvFpUdHu-n_NvbBW5-uMmf5JvUNrdfZMHZqNMmaA";
 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); // [web:21][web:25]
 
@@ -373,47 +369,130 @@
     let currentQuestionIndex = 0;
     let hasAnswered = false;
 
+    // Questions originales inspirées des thèmes officiels (pas celles de Codes Rousseau). [web:35][web:38]
     const questions = [
+      // LIMITATIONS DE VITESSE
       {
         id: 1,
-        text: "Sur autoroute, la vitesse maximale pour une voiture particulière par temps sec est :",
+        text: "Par temps sec, sur une route à double sens sans séparateur central, la vitesse maximale pour une voiture avec plus de 2 ans de permis est :",
         answers: [
-          "110 km/h",
-          "120 km/h",
-          "130 km/h",
-          "140 km/h",
+          "80 km/h",
+          "90 km/h",
+          "100 km/h",
+          "110 km/h"
         ],
-        correctIndex: 2,
+        correctIndex: 0
       },
       {
         id: 2,
-        text: "À quel moment devez-vous utiliser vos feux de croisement ?",
+        text: "Par temps de pluie, sur autoroute, la vitesse maximale est généralement :",
         answers: [
-          "Uniquement la nuit",
-          "La nuit ou lorsque la visibilité est insuffisante",
-          "Uniquement quand il pleut",
-          "Jamais en agglomération",
+          "90 km/h",
+          "100 km/h",
+          "110 km/h",
+          "130 km/h"
         ],
-        correctIndex: 1,
+        correctIndex: 2
       },
+      // PRIORITÉS
       {
         id: 3,
-        text: "Un panneau triangulaire à bord rouge signifie généralement :",
+        text: "À une intersection sans panneau ni marquage, je dois céder le passage :",
         answers: [
-          "Une obligation",
-          "Une interdiction",
-          "Une indication",
-          "Un danger",
+          "Aux véhicules venant de ma gauche",
+          "Aux véhicules venant de ma droite",
+          "Aux véhicules les plus rapides",
+          "À personne, je suis prioritaire"
         ],
-        correctIndex: 3,
+        correctIndex: 1
       },
+      {
+        id: 4,
+        text: "Je suis sur une route prioritaire signalée par un panneau losange jaune. À la prochaine intersection :",
+        answers: [
+          "Je dois toujours céder le passage",
+          "Je reste prioritaire tant que le panneau de fin de priorité n’est pas présent",
+          "Je suis prioritaire uniquement à droite",
+          "Je dois m’arrêter à chaque intersection"
+        ],
+        correctIndex: 1
+      },
+      // PANNEAUX
+      {
+        id: 5,
+        text: "Un panneau rond à bord rouge avec une valeur « 50 » signifie :",
+        answers: [
+          "Vitesse conseillée à 50 km/h",
+          "Vitesse maximale autorisée à 50 km/h",
+          "Interdiction de circuler à plus de 50 m",
+          "Vitesse minimale obligatoire 50 km/h"
+        ],
+        correctIndex: 1
+      },
+      {
+        id: 6,
+        text: "Un panneau triangulaire à bord rouge avec un symbole de cerf indique :",
+        answers: [
+          "Interdiction d’entrer avec des animaux",
+          "Présence possible d’animaux sauvages sur une certaine distance",
+          "Parking réservé aux chasseurs",
+          "Zone de pique-nique"
+        ],
+        correctIndex: 1
+      },
+      // SÉCURITÉ
+      {
+        id: 7,
+        text: "En cas de brouillard dense (visibilité inférieure à 50 m), sur autoroute, la vitesse maximale est :",
+        answers: [
+          "50 km/h",
+          "70 km/h",
+          "80 km/h",
+          "90 km/h"
+        ],
+        correctIndex: 0
+      },
+      {
+        id: 8,
+        text: "Pour être correctement protégé par la ceinture, je dois :",
+        answers: [
+          "Placer la sangle ventrale sur le ventre",
+          "Placer la sangle diagonale sous le bras",
+          "Plaquer la sangle ventrale au niveau du bassin et la diagonale au milieu de l’épaule",
+          "Croiser les sangles pour plus de maintien"
+        ],
+        correctIndex: 2
+      },
+      // ALCOOL / FATIGUE
+      {
+        id: 9,
+        text: "Après avoir bu de l’alcool, la capacité de réaction du conducteur :",
+        answers: [
+          "S’améliore",
+          "Reste identique",
+          "Se dégrade",
+          "Ne change qu’au-delà de 2 verres"
+        ],
+        correctIndex: 2
+      },
+      {
+        id: 10,
+        text: "En cas de forte somnolence au volant, la meilleure solution est :",
+        answers: [
+          "Ouvrir la fenêtre et monter le son de la radio",
+          "Boire un café et continuer sur une longue distance",
+          "S’arrêter pour dormir même une courte sieste",
+          "Rouler plus vite pour arriver plus tôt"
+        ],
+        correctIndex: 2
+      }
     ];
 
     // ---------- SELECTION DOM ----------
     const views = {
       auth: document.getElementById("auth-view"),
       quiz: document.getElementById("quiz-view"),
-      progress: document.getElementById("progress-view"),
+      progress: document.getElementById("progress-view")
     };
 
     const navButtons = document.querySelectorAll(".nav-btn");
@@ -472,12 +551,12 @@
         tab.classList.add("active");
         currentMode = tab.dataset.mode;
         authError.textContent = "";
-        authHint.textContent = currentMode === "signin"
-          ? "Entre ton email et ton mot de passe pour te connecter."
-          : "Crée un compte avec un email valide. Tu recevras peut‑être un email de confirmation.";
-        authSubmit.textContent = currentMode === "signin"
-          ? "Se connecter"
-          : "Créer un compte";
+        authHint.textContent =
+          currentMode === "signin"
+            ? "Entre ton email et ton mot de passe pour te connecter."
+            : "Crée un compte avec un email valide. Tu recevras peut‑être un email de confirmation.";
+        authSubmit.textContent =
+          currentMode === "signin" ? "Se connecter" : "Créer un compte";
       });
     });
 
@@ -495,7 +574,8 @@
         if (currentMode === "signup") {
           const { data, error } = await supabase.auth.signUp({ email, password }); // [web:26]
           if (error) throw error;
-          authHint.textContent = "Compte créé. Vérifie éventuellement ton email puis connecte‑toi.";
+          authHint.textContent =
+            "Compte créé. Vérifie éventuellement ton email puis connecte‑toi.";
         } else {
           const { data, error } = await supabase.auth.signInWithPassword({ email, password }); // [web:12]
           if (error) throw error;
@@ -503,6 +583,7 @@
           userEmailSpan.textContent = currentUser.email;
           authEmail.value = "";
           authPassword.value = "";
+          logoutBtn.style.display = "inline-flex";
           initAfterLogin();
         }
       } catch (err) {
@@ -513,21 +594,31 @@
     });
 
     logoutBtn.addEventListener("click", async () => {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut(); // [web:39]
       currentUser = null;
       userEmailSpan.textContent = "";
+      logoutBtn.style.display = "none";
+      quizQuestion.textContent = "Connecte-toi pour commencer le quiz.";
+      quizAnswers.innerHTML = "";
+      quizNextBtn.disabled = true;
+      quizFeedback.textContent = "";
+      progTotal.textContent = "0";
+      progCorrect.textContent = "0";
+      progRate.textContent = "0%";
       showView("auth");
     });
 
-    // Sur changement de session [web:21]
+    // Sur changement de session (refresh, etc.) [web:21][web:36]
     supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         currentUser = session.user;
         userEmailSpan.textContent = currentUser.email;
+        logoutBtn.style.display = "inline-flex";
         initAfterLogin();
       } else {
         currentUser = null;
         userEmailSpan.textContent = "";
+        logoutBtn.style.display = "none";
         showView("auth");
       }
     });
@@ -536,7 +627,7 @@
     async function initAfterLogin() {
       showView("quiz");
       await ensureProgressRow();
-      loadProgress();
+      await loadProgress();
       loadQuestion(0);
     }
 
@@ -559,7 +650,7 @@
         await supabase.from("progress").insert({
           user_id: currentUser.id,
           total_questions: 0,
-          correct_answers: 0,
+          correct_answers: 0
         });
       }
     }
@@ -586,7 +677,7 @@
         .update({ total_questions: total, correct_answers: correct })
         .eq("user_id", currentUser.id);
 
-      loadProgress();
+      await loadProgress();
     }
 
     async function loadProgress() {
@@ -608,14 +699,23 @@
       const { total_questions, correct_answers } = data;
       progTotal.textContent = total_questions;
       progCorrect.textContent = correct_answers;
-      const rate = total_questions > 0
-        ? Math.round((correct_answers / total_questions) * 100)
-        : 0;
+      const rate =
+        total_questions > 0
+          ? Math.round((correct_answers / total_questions) * 100)
+          : 0;
       progRate.textContent = rate + "%";
     }
 
     // ---------- QUIZ ----------
     function loadQuestion(index) {
+      if (!currentUser) {
+        quizQuestion.textContent = "Connecte-toi pour commencer le quiz.";
+        quizAnswers.innerHTML = "";
+        quizNextBtn.disabled = true;
+        quizFeedback.textContent = "";
+        return;
+      }
+
       if (index >= questions.length) {
         currentQuestionIndex = 0;
       } else {
@@ -657,7 +757,7 @@
       const isCorrect = selectedIndex === q.correctIndex;
       quizFeedback.textContent = isCorrect
         ? "Bonne réponse !"
-        : "Mauvaise réponse, regarde bien l’explication dans ton manuel de code.";
+        : "Mauvaise réponse, prends le temps de revoir ce thème.";
 
       quizNextBtn.disabled = false;
 
@@ -670,7 +770,8 @@
 
     // ---------- DEMARRAGE ----------
     showView("auth");
-    authHint.textContent = "Entre ton email et ton mot de passe pour te connecter.";
+    authHint.textContent =
+      "Entre ton email et ton mot de passe pour te connecter.";
   </script>
 </body>
 </html>
